@@ -14,6 +14,7 @@ import {
   listReminders,
   snoozeReminder,
 } from "@/services/api/municipal";
+import type { Reminder } from "@/types/crm";
 import {
   getScannerResults,
   getScannerResultsFiltered,
@@ -125,6 +126,34 @@ export function useCreateReminder() {
       void qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
       void qc.invalidateQueries({ queryKey: ["reminders"] });
       void qc.invalidateQueries({ queryKey: ["customer", vars.customerId] });
+    },
+  });
+}
+
+export function useCompleteRouteStop() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { reminder: Reminder }) => {
+      const customerId = input.reminder.customer_id ?? 0;
+      if (!customerId) {
+        throw new Error("Reminder is missing customer_id for route completion.");
+      }
+
+      await createCustomerActivity({
+        customerId,
+        activityTypeId: 3,
+        title: "Route stop completed",
+        description: `Completed route stop from reminder: ${input.reminder.title}`,
+        createReminder: false,
+      });
+
+      await completeReminder(input.reminder.id);
+      return { ok: true };
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      void qc.invalidateQueries({ queryKey: ["reminders"] });
+      void qc.invalidateQueries({ queryKey: ["customer-activities"] });
     },
   });
 }

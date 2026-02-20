@@ -43,6 +43,10 @@ Run one improved iOS app while keeping all existing municipal data and workflows
 
 ## Rollout Steps
 
+Status (2026-02-20):
+- Phase A complete
+- Phase B in progress (auto-match scanner hits complete; route completion writes complete)
+
 1. Phase A (now): parity on current data and actions
 2. Field test with stepdad for 3-5 days
 3. Capture friction points (missing fields, extra taps, unclear labels)

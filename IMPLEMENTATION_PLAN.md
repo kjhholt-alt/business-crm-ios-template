@@ -1,6 +1,6 @@
 # Implementation Plan - Business CRM iOS Template
 
-Status (2026-02-20): Phase 1 COMPLETE, Phase A Parity In Progress
+Status (2026-02-20): Phase 1 COMPLETE, Phase A Parity COMPLETE
 
 ## Objective
 
@@ -32,7 +32,8 @@ Create one production iOS CRM app that combines:
 - [x] Scanner filters (city/state/search) and follow-up reminder action
 - [x] Route list generated from open reminders + map launch
 - [x] Scanner hit to customer quick-match (account search + select)
-- [ ] Route stop completion writeback to activities/reminders
+- [x] Auto-match scanner hits to accounts (city/name heuristic)
+- [x] Route stop completion writeback to activities/reminders
 
 ## Phase 2 - Pipeline + Lead Intelligence
 

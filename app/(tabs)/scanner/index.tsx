@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Linking,
@@ -16,6 +16,7 @@ import {
   useScannerResultsFiltered,
   useScannerStats,
 } from "@/hooks/use-crm-data";
+import type { Customer, ScanResult } from "@/types/crm";
 
 export default function ScannerScreen() {
   const [search, setSearch] = useState("");
@@ -23,12 +24,30 @@ export default function ScannerScreen() {
   const [state, setState] = useState("");
   const [accountSearch, setAccountSearch] = useState("");
   const [accountId, setAccountId] = useState("");
+  const [autoMatchTarget, setAutoMatchTarget] = useState<ScanResult | null>(null);
+  const [autoMatchMessage, setAutoMatchMessage] = useState<string | null>(null);
   const stats = useScannerStats();
   const results = useScannerResultsFiltered({ search, city, state });
   const accounts = useCustomers(accountSearch);
   const createReminder = useCreateReminder();
 
   const selectedAccountId = useMemo(() => Number(accountId || 0), [accountId]);
+
+  useEffect(() => {
+    if (!autoMatchTarget) return;
+    if (!accounts.data || accounts.data.length === 0) return;
+
+    const best = findBestAccountMatch(accounts.data, autoMatchTarget);
+    if (!best) {
+      setAutoMatchMessage("No match found. Try searching by business name.");
+      setAutoMatchTarget(null);
+      return;
+    }
+
+    setAccountId(String(best.id));
+    setAutoMatchMessage(`Suggested: ${best.business_name}`);
+    setAutoMatchTarget(null);
+  }, [accounts.data, autoMatchTarget]);
 
   return (
     <View style={styles.root}>
@@ -98,6 +117,7 @@ export default function ScannerScreen() {
           <Text style={styles.selectedAccount}>
             Selected account: {selectedAccountId || "none"}
           </Text>
+          {autoMatchMessage ? <Text style={styles.autoMatch}>{autoMatchMessage}</Text> : null}
         </View>
       </AppCard>
 
@@ -127,6 +147,18 @@ export default function ScannerScreen() {
                 <Text style={styles.actionText}>Open Source</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                style={[styles.actionBtn, styles.actionMatch]}
+                onPress={() => {
+                  setAutoMatchMessage(null);
+                  setAutoMatchTarget(item);
+                  setAccountSearch(item.city || item.keyword || item.page_title || "");
+                }}
+              >
+                <Text style={styles.actionText}>
+                  {autoMatchTarget?.id === item.id ? "Matching..." : "Auto-match"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={[styles.actionBtn, styles.actionFollowUp]}
                 disabled={!selectedAccountId || createReminder.isPending}
                 onPress={() => {
@@ -154,6 +186,37 @@ export default function ScannerScreen() {
   );
 }
 
+function findBestAccountMatch(accounts: Customer[], hit: ScanResult) {
+  const text = normalize(`${hit.page_title} ${hit.snippet} ${hit.keyword}`);
+  const targetCity = normalize(hit.city);
+  const targetState = normalize(hit.state);
+
+  let best: { score: number; account: Customer } | null = null;
+  accounts.forEach((account) => {
+    const name = normalize(account.business_name);
+    const city = normalize(account.city);
+    const state = normalize(account.state);
+    let score = 0;
+
+    if (name && text.includes(name)) score += 5;
+    if (targetCity && city === targetCity) score += 2;
+    if (targetState && state === targetState) score += 1;
+    if (name && text.includes(name.split(" ")[0] ?? "")) score += 1;
+
+    if (!best || score > best.score) {
+      best = { score, account };
+    }
+  });
+
+  if (!best || best.score < 2) return null;
+  return best.account;
+}
+
+function normalize(value: string | null | undefined) {
+  if (!value) return "";
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg, padding: 16, gap: 12 },
   title: { color: theme.text, fontSize: 24, fontWeight: "800" },
@@ -174,6 +237,7 @@ const styles = StyleSheet.create({
   accountName: { color: theme.text, fontSize: 12, fontWeight: "700" },
   accountMeta: { color: theme.textMuted, fontSize: 11 },
   selectedAccount: { color: theme.amber, fontSize: 12, fontWeight: "700" },
+  autoMatch: { color: theme.textMuted, fontSize: 12 },
   input: {
     borderRadius: 10,
     borderWidth: 1,
@@ -204,6 +268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
+  actionMatch: { backgroundColor: "#0f766e" },
   actionFollowUp: { backgroundColor: theme.amber },
   actionText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   actionFollowUpText: { color: "#111" },
