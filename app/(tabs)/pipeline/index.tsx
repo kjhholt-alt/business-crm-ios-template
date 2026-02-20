@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { toast } from "@/components/ui/toast";
 import { theme } from "@/constants/theme";
 import { AppCard, LoadingBlock } from "@/components/ui";
 import { useAiBrief, useLeadFitExplanation } from "@/hooks/use-ai";
@@ -383,13 +384,27 @@ export default function PipelineScreen() {
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}
                   onPress={() => {
-                    if (!config.pipelineBase) return;
+                    if (!config.pipelineBase) {
+                      toast.error("Pipeline sync not configured.");
+                      return;
+                    }
                     const localLeads = leads.filter((lead) => isLocalLead(lead.id));
-                    if (localLeads.length === 0) return;
+                    if (localLeads.length === 0) {
+                      toast.success("All leads already synced.");
+                      return;
+                    }
+                    let completed = 0;
                     localLeads.forEach((lead) => {
                       createLead.mutate(lead, {
                         onSuccess: (saved) => {
                           setLeads((prev) => replaceLeadId(prev, lead.id, saved.id));
+                          completed += 1;
+                          if (completed === localLeads.length) {
+                            toast.success("Local leads synced.");
+                          }
+                        },
+                        onError: () => {
+                          toast.error("Failed to sync one or more leads.");
                         },
                       });
                     });
