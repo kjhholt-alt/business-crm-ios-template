@@ -10,4 +10,6 @@ export const config = {
     "https://tender-cooperation-production.up.railway.app/scanner",
   barrelhouseApiBase: process.env.EXPO_PUBLIC_BARRELHOUSE_API_BASE ?? "",
   barrelhouseToken: process.env.EXPO_PUBLIC_BARRELHOUSE_TOKEN ?? "",
+  aiAssistBase: process.env.EXPO_PUBLIC_AI_ASSIST_BASE ?? "",
+  aiAssistToken: process.env.EXPO_PUBLIC_AI_ASSIST_TOKEN ?? "",
 };

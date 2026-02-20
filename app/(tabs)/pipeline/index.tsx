@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "@/constants/theme";
 import { AppCard, LoadingBlock } from "@/components/ui";
+import { useAiBrief } from "@/hooks/use-ai";
 import { useBarrelhouseStats, useDashboardSummary, useReminders } from "@/hooks/use-crm-data";
 import type { Lead, PipelineStage, Reminder } from "@/types/crm";
 
@@ -43,6 +44,7 @@ export default function PipelineScreen() {
     [leads]
   );
   const aiBrief = useMemo(() => buildAIBrief(leads), [leads]);
+  const aiBriefQuery = useAiBrief(leads);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
@@ -199,23 +201,39 @@ export default function PipelineScreen() {
         )}
       </AppCard>
 
-      <AppCard title="AI Assist" subtitle="Drafts and insights (mocked)">
+      <AppCard title="AI Assist" subtitle="Drafts and insights">
+        {!aiBriefQuery.data && !aiBriefQuery.isLoading ? (
+          <Text style={styles.note}>
+            Connect AI assist to replace this preview.
+          </Text>
+        ) : null}
+        {aiBriefQuery.isError ? (
+          <Text style={styles.errorText}>AI assist failed. Showing preview copy.</Text>
+        ) : null}
         <Text style={styles.aiHeadline}>Weekly Brief</Text>
-        <Text style={styles.aiBody}>{aiBrief.summary}</Text>
+        <Text style={styles.aiBody}>{aiBriefQuery.data?.summary ?? aiBrief.summary}</Text>
 
         <Text style={styles.aiHeadline}>Hot Lead Insight</Text>
-        <Text style={styles.aiBody}>{aiBrief.hotInsight}</Text>
+        <Text style={styles.aiBody}>
+          {aiBriefQuery.data?.hotInsight ?? aiBrief.hotInsight}
+        </Text>
 
         <Text style={styles.aiHeadline}>Suggested Follow-ups</Text>
-        {aiBrief.followUps.map((item) => (
+        {(aiBriefQuery.data?.followUps ?? aiBrief.followUps).map((item) => (
           <View key={item.id} style={styles.aiRow}>
             <Text style={styles.aiRowTitle}>{item.title}</Text>
             <Text style={styles.aiRowBody}>{item.suggestion}</Text>
           </View>
         ))}
 
-        <TouchableOpacity style={styles.aiButton}>
-          <Text style={styles.aiButtonText}>Generate Real Brief</Text>
+        <TouchableOpacity
+          style={styles.aiButton}
+          onPress={() => aiBriefQuery.refetch()}
+          disabled={aiBriefQuery.isLoading}
+        >
+          <Text style={styles.aiButtonText}>
+            {aiBriefQuery.isLoading ? "Generating..." : "Generate Real Brief"}
+          </Text>
         </TouchableOpacity>
       </AppCard>
     </ScrollView>
@@ -432,6 +450,7 @@ const styles = StyleSheet.create({
   queueTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
   aiHeadline: { color: theme.text, fontSize: 13, fontWeight: "800" },
   aiBody: { color: theme.textMuted, fontSize: 12, marginBottom: 6 },
+  errorText: { color: "#ef4444", fontSize: 12 },
   aiRow: {
     borderWidth: 1,
     borderColor: theme.border,
