@@ -11,6 +11,7 @@ import {
 import { theme } from "@/constants/theme";
 import { AppCard, ErrorBlock, LoadingBlock } from "@/components/ui";
 import {
+  useCustomers,
   useCreateReminder,
   useScannerResultsFiltered,
   useScannerStats,
@@ -20,9 +21,11 @@ export default function ScannerScreen() {
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [accountSearch, setAccountSearch] = useState("");
   const [accountId, setAccountId] = useState("");
   const stats = useScannerStats();
   const results = useScannerResultsFiltered({ search, city, state });
+  const accounts = useCustomers(accountSearch);
   const createReminder = useCreateReminder();
 
   const selectedAccountId = useMemo(() => Number(accountId || 0), [accountId]);
@@ -69,13 +72,32 @@ export default function ScannerScreen() {
             />
           </View>
           <TextInput
-            value={accountId}
-            onChangeText={setAccountId}
-            keyboardType="numeric"
-            placeholder="Account ID for follow-up actions"
+            value={accountSearch}
+            onChangeText={setAccountSearch}
+            placeholder="Find account by business/contact/city"
             placeholderTextColor={theme.textMuted}
             style={styles.input}
           />
+          <View style={styles.accounts}>
+            {(accounts.data ?? []).slice(0, 5).map((account) => (
+              <TouchableOpacity
+                key={account.id}
+                style={[
+                  styles.accountRow,
+                  String(account.id) === accountId ? styles.accountRowActive : null,
+                ]}
+                onPress={() => setAccountId(String(account.id))}
+              >
+                <Text style={styles.accountName}>{account.business_name}</Text>
+                <Text style={styles.accountMeta}>
+                  #{account.id} • {account.city}, {account.state}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.selectedAccount}>
+            Selected account: {selectedAccountId || "none"}
+          </Text>
         </View>
       </AppCard>
 
@@ -139,6 +161,19 @@ const styles = StyleSheet.create({
   section: { color: theme.text, fontSize: 16, fontWeight: "700" },
   filters: { gap: 8 },
   filterRow: { flexDirection: "row", gap: 8 },
+  accounts: { gap: 6 },
+  accountRow: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 8,
+    backgroundColor: theme.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  accountRowActive: { borderColor: theme.amber },
+  accountName: { color: theme.text, fontSize: 12, fontWeight: "700" },
+  accountMeta: { color: theme.textMuted, fontSize: 11 },
+  selectedAccount: { color: theme.amber, fontSize: 12, fontWeight: "700" },
   input: {
     borderRadius: 10,
     borderWidth: 1,

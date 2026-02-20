@@ -31,7 +31,7 @@ Create one production iOS CRM app that combines:
 - [x] Dedicated reminders queue (overdue/today/week)
 - [x] Scanner filters (city/state/search) and follow-up reminder action
 - [x] Route list generated from open reminders + map launch
-- [ ] Scanner hit to customer auto-match (replace manual account id)
+- [x] Scanner hit to customer quick-match (account search + select)
 - [ ] Route stop completion writeback to activities/reminders
 
 ## Phase 2 - Pipeline + Lead Intelligence

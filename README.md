@@ -39,6 +39,7 @@ npx expo start --tunnel
   - complete + snooze actions
 - Scanner workflow now includes:
   - city/state/search filters
+  - account quick-search + select
   - create follow-up reminder action from scanner hit
 - Route module now includes:
   - stop list generated from real reminders with customer addresses
