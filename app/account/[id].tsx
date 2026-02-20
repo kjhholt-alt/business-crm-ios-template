@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { theme } from "@/constants/theme";
 import { AppCard, ErrorBlock, LoadingBlock } from "@/components/ui";
+import { useAiNoteSummary } from "@/hooks/use-ai";
 import {
   useAddCustomerNote,
   useCreateCustomerActivity,
@@ -33,6 +34,23 @@ export default function AccountDetailScreen() {
   const customer = useCustomer(customerId);
   const notes = useCustomerNotes(customerId);
   const activities = useCustomerActivities(customerId);
+  const aiSummary = useAiNoteSummary(
+    {
+      customerName: customer.data?.business_name,
+      notes:
+        (notes.data ?? []).map((note) => ({
+          content: note.content,
+          created_at: note.created_at,
+        })) ?? [],
+      activities:
+        (activities.data ?? []).map((activity) => ({
+          title: activity.title,
+          description: activity.description,
+          activity_date: activity.activity_date,
+        })) ?? [],
+    },
+    false
+  );
   const addNote = useAddCustomerNote();
   const addActivity = useCreateCustomerActivity();
   const addReminder = useCreateReminder();
@@ -184,6 +202,43 @@ export default function AccountDetailScreen() {
         </View>
       </AppCard>
 
+      <AppCard title="AI Summary">
+        <Text style={styles.meta}>Summarize notes + activity history.</Text>
+        {aiSummary.isError ? (
+          <Text style={styles.errorText}>AI summary failed. Check AI proxy.</Text>
+        ) : null}
+        {aiSummary.data ? (
+          <View style={styles.list}>
+            <Text style={styles.itemText}>{aiSummary.data.summary}</Text>
+            <View style={styles.list}>
+              {aiSummary.data.highlights.map((item, idx) => (
+                <Text key={`highlight-${idx}`} style={styles.itemMeta}>
+                  • {item}
+                </Text>
+              ))}
+            </View>
+            {aiSummary.data.nextActions.length ? (
+              <View style={styles.list}>
+                {aiSummary.data.nextActions.map((item, idx) => (
+                  <Text key={`next-${idx}`} style={styles.itemMeta}>
+                    → {item}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+        <TouchableOpacity
+          style={styles.button}
+          disabled={aiSummary.isLoading}
+          onPress={() => aiSummary.refetch()}
+        >
+          <Text style={styles.buttonText}>
+            {aiSummary.isLoading ? "Summarizing..." : "Generate Summary"}
+          </Text>
+        </TouchableOpacity>
+      </AppCard>
+
       <AppCard title="Activity History">
         {activities.isLoading ? <LoadingBlock /> : null}
         <View style={styles.list}>
@@ -257,6 +312,7 @@ const styles = StyleSheet.create({
   chipText: { color: theme.textMuted, fontSize: 12, fontWeight: "700" },
   chipTextActive: { color: "#111" },
   meta: { color: theme.textMuted, fontSize: 13 },
+  errorText: { color: "#ef4444", fontSize: 12 },
   input: {
     borderWidth: 1,
     borderColor: theme.border,

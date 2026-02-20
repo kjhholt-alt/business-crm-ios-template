@@ -119,3 +119,5 @@ export interface Lead {
   nextAction?: string;
   customerId?: number;
 }
+
+export type PipelineFilterKey = "hot" | "stale" | "follow_up";

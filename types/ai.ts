@@ -15,3 +15,15 @@ export interface AiBriefResponse {
   hotInsight: string;
   followUps: AiBriefFollowUp[];
 }
+
+export interface AiNoteSummaryRequest {
+  customerName?: string;
+  notes: { content: string; created_at: string }[];
+  activities: { title: string; description: string; activity_date: string }[];
+}
+
+export interface AiNoteSummaryResponse {
+  summary: string;
+  highlights: string[];
+  nextActions: string[];
+}

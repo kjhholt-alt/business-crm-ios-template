@@ -1,16 +1,35 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "@/constants/theme";
 import { AppCard, LoadingBlock } from "@/components/ui";
 import { useAiBrief } from "@/hooks/use-ai";
 import { useBarrelhouseStats, useDashboardSummary, useReminders } from "@/hooks/use-crm-data";
-import type { Lead, PipelineStage, Reminder } from "@/types/crm";
+import {
+  loadMyDayStages,
+  loadPipelineFilters,
+  loadPipelineLeads,
+  saveMyDayStages,
+  savePipelineFilters,
+  savePipelineLeads,
+} from "@/services/storage";
+import type { Lead, PipelineFilterKey, PipelineStage, Reminder } from "@/types/crm";
 
 export default function PipelineScreen() {
   const barrelhouse = useBarrelhouseStats();
   const municipal = useDashboardSummary();
   const reminders = useReminders();
   const [leads, setLeads] = useState<Lead[]>(seedLeads);
+  const [myDayStages, setMyDayStages] = useState<PipelineStage[]>([
+    "Contacted",
+    "Qualified",
+    "Meeting Scheduled",
+  ]);
+  const [activeFilters, setActiveFilters] = useState<PipelineFilterKey[]>([
+    "hot",
+    "stale",
+    "follow_up",
+  ]);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const municipalLeads = useMemo(
     () =>
@@ -36,15 +55,51 @@ export default function PipelineScreen() {
   }, [leads]);
 
   const priorityQueues = useMemo(() => buildPriorityQueues(leads), [leads]);
-  const myDay = useMemo(
-    () =>
-      leads.filter((lead) =>
-        ["Contacted", "Qualified", "Meeting Scheduled"].includes(lead.stage)
-      ),
-    [leads]
-  );
+  const myDay = useMemo(() => leads.filter((lead) => myDayStages.includes(lead.stage)), [
+    leads,
+    myDayStages,
+  ]);
   const aiBrief = useMemo(() => buildAIBrief(leads), [leads]);
   const aiBriefQuery = useAiBrief(leads);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [storedLeads, storedFilters, storedMyDay] = await Promise.all([
+          loadPipelineLeads(),
+          loadPipelineFilters(),
+          loadMyDayStages(),
+        ]);
+        if (!mounted) return;
+        if (storedLeads && storedLeads.length) setLeads(storedLeads);
+        if (storedFilters && storedFilters.length) setActiveFilters(storedFilters);
+        if (storedMyDay && storedMyDay.length) setMyDayStages(storedMyDay);
+      } catch {
+        // ignore persistence failures
+      } finally {
+        if (mounted) setIsHydrated(true);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    void savePipelineLeads(leads);
+  }, [leads, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    void savePipelineFilters(activeFilters);
+  }, [activeFilters, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    void saveMyDayStages(myDayStages);
+  }, [myDayStages, isHydrated]);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
@@ -107,6 +162,33 @@ export default function PipelineScreen() {
       </AppCard>
 
       <AppCard title="My Day" subtitle="Leads needing action today">
+        <View style={styles.filterRow}>
+          {pipelineStages.map((stage) => (
+            <TouchableOpacity
+              key={`myday-${stage}`}
+              style={[
+                styles.filterChip,
+                myDayStages.includes(stage) ? styles.filterChipActive : null,
+              ]}
+              onPress={() =>
+                setMyDayStages((prev) =>
+                  prev.includes(stage)
+                    ? prev.filter((s) => s !== stage)
+                    : [...prev, stage]
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  myDayStages.includes(stage) ? styles.filterChipTextActive : null,
+                ]}
+              >
+                {stage}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         {myDay.length === 0 ? (
           <Text style={styles.note}>No priority leads right now.</Text>
         ) : (
@@ -129,32 +211,59 @@ export default function PipelineScreen() {
       </AppCard>
 
       <AppCard title="Priority Queues" subtitle="Hot, stale, and needs follow-up">
-        {priorityQueues.hot.length === 0 ? (
+        <View style={styles.filterRow}>
+          {filterOptions.map((filter) => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterChip,
+                activeFilters.includes(filter.key) ? styles.filterChipActive : null,
+              ]}
+              onPress={() =>
+                setActiveFilters((prev) =>
+                  prev.includes(filter.key)
+                    ? prev.filter((id) => id !== filter.key)
+                    : [...prev, filter.key]
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  activeFilters.includes(filter.key) ? styles.filterChipTextActive : null,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {activeFilters.includes("hot") && priorityQueues.hot.length === 0 ? (
           <Text style={styles.note}>No hot leads yet.</Text>
-        ) : (
+        ) : activeFilters.includes("hot") ? (
           priorityQueues.hot.map((lead) => (
             <View key={`hot-${lead.id}`} style={styles.queueRow}>
               <Text style={styles.queueLabel}>Hot</Text>
               <Text style={styles.queueTitle}>{lead.title}</Text>
             </View>
           ))
-        )}
-        {priorityQueues.stale.length === 0 ? null : (
+        ) : null}
+        {activeFilters.includes("stale") && priorityQueues.stale.length === 0 ? null : activeFilters.includes("stale") ? (
           priorityQueues.stale.map((lead) => (
             <View key={`stale-${lead.id}`} style={styles.queueRow}>
               <Text style={[styles.queueLabel, styles.queueStale]}>Stale</Text>
               <Text style={styles.queueTitle}>{lead.title}</Text>
             </View>
           ))
-        )}
-        {priorityQueues.needsFollowUp.length === 0 ? null : (
+        ) : null}
+        {activeFilters.includes("follow_up") && priorityQueues.needsFollowUp.length === 0 ? null : activeFilters.includes("follow_up") ? (
           priorityQueues.needsFollowUp.map((lead) => (
             <View key={`follow-${lead.id}`} style={styles.queueRow}>
               <Text style={[styles.queueLabel, styles.queueFollow]}>Follow-up</Text>
               <Text style={styles.queueTitle}>{lead.title}</Text>
             </View>
           ))
-        )}
+        ) : null}
       </AppCard>
 
       <AppCard title="Active Pipeline" subtitle="Stage movement (local)">
@@ -247,6 +356,12 @@ const pipelineStages: PipelineStage[] = [
   "Meeting Scheduled",
   "Proposal / Bid Sent",
   "Won / Closed",
+];
+
+const filterOptions: { key: PipelineFilterKey; label: string }[] = [
+  { key: "hot", label: "Hot" },
+  { key: "stale", label: "Stale" },
+  { key: "follow_up", label: "Follow-up" },
 ];
 
 function Metric({ label, value }: { label: string; value: string | number }) {
@@ -448,6 +563,18 @@ const styles = StyleSheet.create({
   queueStale: { backgroundColor: "#6b7280" },
   queueFollow: { backgroundColor: "#0f766e" },
   queueTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  filterChip: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: theme.surface,
+  },
+  filterChipActive: { backgroundColor: theme.amber, borderColor: theme.amber },
+  filterChipText: { color: theme.textMuted, fontSize: 11, fontWeight: "700" },
+  filterChipTextActive: { color: "#111" },
   aiHeadline: { color: theme.text, fontSize: 13, fontWeight: "800" },
   aiBody: { color: theme.textMuted, fontSize: 12, marginBottom: 6 },
   errorText: { color: "#ef4444", fontSize: 12 },

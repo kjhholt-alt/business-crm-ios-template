@@ -44,13 +44,13 @@ Create one production iOS CRM app that combines:
 - [x] Scoring badges for active leads
 - [x] Priority queues (stale/hot/needs-follow-up)
 - [x] "My Day" queue
-- [ ] Saved filters and "my day" personalization
+- [x] Saved filters and "my day" personalization (local)
 
 ## Phase 3 - AI Assist Layer
 
 - [x] AI assist UI panel (weekly brief + follow-up drafts, mocked)
 - [x] AI assist API hook + proxy config (awaiting backend)
-- [ ] AI note summarizer for meeting minutes and account timelines
+- [x] AI note summarizer UI + hook (awaiting backend)
 - [ ] Auto-generated follow-up drafts (email/SMS/call scripts)
 - [ ] Lead fit score explanation panel (why this is hot/cold)
 - [ ] Weekly AI brief: opportunities, stale leads, urgent follow-ups (real)
