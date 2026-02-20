@@ -42,8 +42,9 @@ Create one production iOS CRM app that combines:
   - BarrelHouse franchise leads
 - [x] Stage movement actions with optimistic updates (local state)
 - [x] Scoring badges for active leads
-- [ ] Priority queues (stale/hot/needs-follow-up)
-- [ ] Saved filters and "my day" queue
+- [x] Priority queues (stale/hot/needs-follow-up)
+- [x] "My Day" queue
+- [ ] Saved filters and "my day" personalization
 
 ## Phase 3 - AI Assist Layer
 

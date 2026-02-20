@@ -34,6 +34,15 @@ export default function PipelineScreen() {
     return counts;
   }, [leads]);
 
+  const priorityQueues = useMemo(() => buildPriorityQueues(leads), [leads]);
+  const myDay = useMemo(
+    () =>
+      leads.filter((lead) =>
+        ["Contacted", "Qualified", "Meeting Scheduled"].includes(lead.stage)
+      ),
+    [leads]
+  );
+
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Pipeline</Text>
@@ -89,6 +98,57 @@ export default function PipelineScreen() {
               >
                 <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
+            </View>
+          ))
+        )}
+      </AppCard>
+
+      <AppCard title="My Day" subtitle="Leads needing action today">
+        {myDay.length === 0 ? (
+          <Text style={styles.note}>No priority leads right now.</Text>
+        ) : (
+          myDay.map((lead) => (
+            <View key={`day-${lead.id}`} style={styles.pipelineCard}>
+              <View style={styles.pipelineHeader}>
+                <Text style={styles.leadTitle}>{lead.title}</Text>
+                <Text style={styles.score}>{lead.score}</Text>
+              </View>
+              <Text style={styles.leadMeta}>
+                {lead.city ?? "—"} {lead.state ? `• ${lead.state}` : ""}
+              </Text>
+              <Text style={styles.stageTag}>{lead.stage}</Text>
+              {lead.nextAction ? (
+                <Text style={styles.nextAction}>Next: {lead.nextAction}</Text>
+              ) : null}
+            </View>
+          ))
+        )}
+      </AppCard>
+
+      <AppCard title="Priority Queues" subtitle="Hot, stale, and needs follow-up">
+        {priorityQueues.hot.length === 0 ? (
+          <Text style={styles.note}>No hot leads yet.</Text>
+        ) : (
+          priorityQueues.hot.map((lead) => (
+            <View key={`hot-${lead.id}`} style={styles.queueRow}>
+              <Text style={styles.queueLabel}>Hot</Text>
+              <Text style={styles.queueTitle}>{lead.title}</Text>
+            </View>
+          ))
+        )}
+        {priorityQueues.stale.length === 0 ? null : (
+          priorityQueues.stale.map((lead) => (
+            <View key={`stale-${lead.id}`} style={styles.queueRow}>
+              <Text style={[styles.queueLabel, styles.queueStale]}>Stale</Text>
+              <Text style={styles.queueTitle}>{lead.title}</Text>
+            </View>
+          ))
+        )}
+        {priorityQueues.needsFollowUp.length === 0 ? null : (
+          priorityQueues.needsFollowUp.map((lead) => (
+            <View key={`follow-${lead.id}`} style={styles.queueRow}>
+              <Text style={[styles.queueLabel, styles.queueFollow]}>Follow-up</Text>
+              <Text style={styles.queueTitle}>{lead.title}</Text>
             </View>
           ))
         )}
@@ -212,6 +272,15 @@ function moveLead(current: Lead[], leadId: string, delta: number) {
   });
 }
 
+function buildPriorityQueues(leads: Lead[]) {
+  const hot = leads.filter((lead) => lead.score >= 80 && lead.stage !== "Won / Closed");
+  const stale = leads.filter((lead) => lead.stage === "Contacted" && lead.score < 60);
+  const needsFollowUp = leads.filter(
+    (lead) => lead.stage === "Qualified" || lead.stage === "Meeting Scheduled"
+  );
+  return { hot, stale, needsFollowUp };
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   content: { padding: 16, gap: 12 },
@@ -295,4 +364,27 @@ const styles = StyleSheet.create({
   actionGhost: { backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border },
   actionText: { color: "#fff", fontWeight: "700", fontSize: 12 },
   actionTextDark: { color: theme.text },
+  queueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surfaceAlt,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  queueLabel: {
+    backgroundColor: "#dc2626",
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  queueStale: { backgroundColor: "#6b7280" },
+  queueFollow: { backgroundColor: "#0f766e" },
+  queueTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
 });
