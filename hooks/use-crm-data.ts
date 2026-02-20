@@ -1,7 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBarrelhousePipelineStats } from "@/services/api/barrelhouse";
 import { getConnectionStatuses } from "@/services/api/connections";
-import { getDashboardSummary, listCustomers } from "@/services/api/municipal";
+import {
+  addCustomerNote,
+  completeReminder,
+  createCustomerActivity,
+  createReminder,
+  getCustomer,
+  getDashboardSummary,
+  listCustomerActivities,
+  listCustomerNotes,
+  listCustomers,
+  listReminders,
+  snoozeReminder,
+} from "@/services/api/municipal";
 import { getScannerResults, getScannerStats } from "@/services/api/scanner";
 
 export function useDashboardSummary() {
@@ -17,6 +29,99 @@ export function useCustomers(search: string) {
     queryKey: ["customers", search],
     queryFn: () => listCustomers(search),
     staleTime: 60_000,
+  });
+}
+
+export function useCustomer(customerId: number) {
+  return useQuery({
+    queryKey: ["customer", customerId],
+    queryFn: () => getCustomer(customerId),
+    enabled: Number.isFinite(customerId) && customerId > 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useCustomerNotes(customerId: number) {
+  return useQuery({
+    queryKey: ["customer-notes", customerId],
+    queryFn: () => listCustomerNotes(customerId),
+    enabled: Number.isFinite(customerId) && customerId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useCustomerActivities(customerId: number) {
+  return useQuery({
+    queryKey: ["customer-activities", customerId],
+    queryFn: () => listCustomerActivities(customerId),
+    enabled: Number.isFinite(customerId) && customerId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useReminders() {
+  return useQuery({
+    queryKey: ["reminders"],
+    queryFn: listReminders,
+    staleTime: 30_000,
+  });
+}
+
+export function useAddCustomerNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { customerId: number; content: string }) =>
+      addCustomerNote(input.customerId, input.content),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ["customer-notes", vars.customerId] });
+    },
+  });
+}
+
+export function useCreateCustomerActivity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createCustomerActivity,
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ["customer-activities", vars.customerId] });
+      void qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      void qc.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+}
+
+export function useCompleteReminder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reminderId: number) => completeReminder(reminderId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      void qc.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+}
+
+export function useSnoozeReminder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { reminderId: number; days?: number }) =>
+      snoozeReminder(input.reminderId, input.days ?? 3),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      void qc.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+}
+
+export function useCreateReminder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createReminder,
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      void qc.invalidateQueries({ queryKey: ["reminders"] });
+      void qc.invalidateQueries({ queryKey: ["customer", vars.customerId] });
+    },
   });
 }
 

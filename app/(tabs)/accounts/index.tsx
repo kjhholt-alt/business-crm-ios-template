@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
 import { ErrorBlock, LoadingBlock } from "@/components/ui";
 import { useCustomers } from "@/hooks/use-crm-data";
 
 export default function AccountsScreen() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const customers = useCustomers(search);
 
@@ -34,7 +36,11 @@ export default function AccountsScreen() {
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => router.push(`/account/${item.id}`)}
+          >
             <Text style={styles.cardTitle}>{item.business_name}</Text>
             <Text style={styles.cardMeta}>
               {item.city}, {item.state}

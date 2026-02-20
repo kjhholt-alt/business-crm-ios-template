@@ -13,7 +13,7 @@ Template goal: merge the strongest workflow features from `municipal-crm` with t
 ## Quick Start
 
 ```powershell
-cd C:\Users\Kruz\Desktop\Projects\municipal-crm\mobile-business-crm-template
+cd C:\Users\Kruz\Desktop\Projects\business-crm-ios-template
 Copy-Item .env.example .env -Force
 npm install
 npx expo start --tunnel
@@ -36,7 +36,7 @@ npx expo start --tunnel
 ## Immediate Next Build Steps
 
 1. Add secure auth (Supabase Auth or backend JWT)
-2. Add lead detail + activity logging + reminder actions
-3. Add pipeline drag/move actions with backend writes
-4. Add AI assist tab for note summarization and follow-up draft
-5. Add push notifications for overdue/today reminders
+2. Add pipeline drag/move actions with backend writes
+3. Add AI assist tab for note summarization and follow-up draft
+4. Add push notifications for overdue/today reminders
+5. Add full route optimizer and stop completion sync

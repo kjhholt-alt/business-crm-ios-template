@@ -1,18 +1,46 @@
 export interface Customer {
   id: number;
   business_name: string;
+  bill_to_address?: string;
   city: string;
   state: string;
   primary_contact: string;
+  main_email?: string;
   main_phone: string;
   next_call_date: string | null;
 }
 
 export interface Reminder {
   id: number;
+  customer_id?: number;
   title: string;
+  description?: string;
   reminder_date: string;
   status: "pending" | "completed" | "snoozed" | "cancelled";
+  priority?: "low" | "medium" | "high";
+  reminder_type?: string;
+  completed_at?: string | null;
+  snoozed_until?: string | null;
+}
+
+export interface CustomerNote {
+  id: number;
+  customer_id: number;
+  content: string;
+  is_current: boolean;
+  created_at: string;
+  parent_note_id: number | null;
+}
+
+export interface CustomerActivity {
+  id: number;
+  customer_id: number;
+  activity_type_id: number;
+  title: string;
+  description: string;
+  activity_date: string;
+  status: string;
+  created_at: string;
 }
 
 export interface DashboardSummary {
