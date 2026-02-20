@@ -12,4 +12,6 @@ export const config = {
   barrelhouseToken: process.env.EXPO_PUBLIC_BARRELHOUSE_TOKEN ?? "",
   aiAssistBase: process.env.EXPO_PUBLIC_AI_ASSIST_BASE ?? "",
   aiAssistToken: process.env.EXPO_PUBLIC_AI_ASSIST_TOKEN ?? "",
+  pipelineBase: process.env.EXPO_PUBLIC_PIPELINE_BASE ?? "",
+  pipelineToken: process.env.EXPO_PUBLIC_PIPELINE_TOKEN ?? "",
 };

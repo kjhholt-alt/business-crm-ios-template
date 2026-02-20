@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBarrelhousePipelineStats } from "@/services/api/barrelhouse";
+import { config } from "@/services/api/config";
 import { getConnectionStatuses } from "@/services/api/connections";
 import {
   addCustomerNote,
@@ -14,6 +15,7 @@ import {
   listReminders,
   snoozeReminder,
 } from "@/services/api/municipal";
+import { createPipelineLead, listPipelineLeads, updatePipelineLead } from "@/services/api/pipeline";
 import type { Reminder } from "@/types/crm";
 import {
   getScannerResults,
@@ -207,5 +209,34 @@ export function useConnections() {
     queryKey: ["connections"],
     queryFn: getConnectionStatuses,
     staleTime: 30_000,
+  });
+}
+
+export function usePipelineLeads() {
+  return useQuery({
+    queryKey: ["pipeline-leads"],
+    queryFn: listPipelineLeads,
+    enabled: Boolean(config.pipelineBase),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreatePipelineLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createPipelineLead,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pipeline-leads"] });
+    },
+  });
+}
+
+export function useUpdatePipelineLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updatePipelineLead,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pipeline-leads"] });
+    },
   });
 }

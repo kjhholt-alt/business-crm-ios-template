@@ -3,7 +3,14 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { theme } from "@/constants/theme";
 import { AppCard, LoadingBlock } from "@/components/ui";
 import { useAiBrief } from "@/hooks/use-ai";
-import { useBarrelhouseStats, useDashboardSummary, useReminders } from "@/hooks/use-crm-data";
+import {
+  useBarrelhouseStats,
+  useCreatePipelineLead,
+  useDashboardSummary,
+  usePipelineLeads,
+  useReminders,
+  useUpdatePipelineLead,
+} from "@/hooks/use-crm-data";
 import {
   loadMyDayStages,
   loadPipelineFilters,
@@ -12,12 +19,16 @@ import {
   savePipelineFilters,
   savePipelineLeads,
 } from "@/services/storage";
+import { config } from "@/services/api/config";
 import type { Lead, PipelineFilterKey, PipelineStage, Reminder } from "@/types/crm";
 
 export default function PipelineScreen() {
   const barrelhouse = useBarrelhouseStats();
   const municipal = useDashboardSummary();
   const reminders = useReminders();
+  const serverLeads = usePipelineLeads();
+  const createLead = useCreatePipelineLead();
+  const updateLead = useUpdatePipelineLead();
   const [leads, setLeads] = useState<Lead[]>(seedLeads);
   const [myDayStages, setMyDayStages] = useState<PipelineStage[]>([
     "Contacted",
@@ -72,7 +83,11 @@ export default function PipelineScreen() {
           loadMyDayStages(),
         ]);
         if (!mounted) return;
-        if (storedLeads && storedLeads.length) setLeads(storedLeads);
+        if (serverLeads.data && serverLeads.data.length) {
+          setLeads(serverLeads.data);
+        } else if (storedLeads && storedLeads.length) {
+          setLeads(storedLeads);
+        }
         if (storedFilters && storedFilters.length) setActiveFilters(storedFilters);
         if (storedMyDay && storedMyDay.length) setMyDayStages(storedMyDay);
       } catch {
@@ -84,7 +99,7 @@ export default function PipelineScreen() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [serverLeads.data]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -135,6 +150,11 @@ export default function PipelineScreen() {
 
       <AppCard title="Municipal Leads" subtitle="Pull open reminders into pipeline">
         {reminders.isLoading ? <LoadingBlock label="Loading reminders..." /> : null}
+        {config.pipelineBase ? (
+          <Text style={styles.note}>Syncing pipeline to server.</Text>
+        ) : (
+          <Text style={styles.note}>Using local-only pipeline storage.</Text>
+        )}
         {municipalLeads.length === 0 ? (
           <Text style={styles.note}>No open reminders to add.</Text>
         ) : (
@@ -150,9 +170,20 @@ export default function PipelineScreen() {
               </View>
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() =>
-                  setLeads((prev) => addLeadFromReminder(prev, reminder))
-                }
+                onPress={() => {
+                  const next = addLeadFromReminder(leads, reminder);
+                  setLeads(next);
+                  const added = next.find(
+                    (lead) => lead.customerId === reminder.customer?.id && lead.source === "municipal"
+                  );
+                  if (added && config.pipelineBase) {
+                    createLead.mutate(added, {
+                      onSuccess: (saved) => {
+                        setLeads((prev) => replaceLeadId(prev, added.id, saved.id));
+                      },
+                    });
+                  }
+                }}
               >
                 <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
@@ -294,13 +325,27 @@ export default function PipelineScreen() {
               <View style={styles.pipelineActions}>
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}
-                  onPress={() => setLeads((prev) => moveLead(prev, lead.id, -1))}
+                  onPress={() => {
+                    const next = moveLead(leads, lead.id, -1);
+                    setLeads(next);
+                    const updated = next.find((item) => item.id === lead.id);
+                    if (updated && config.pipelineBase && isServerLead(updated.id)) {
+                      updateLead.mutate(updated);
+                    }
+                  }}
                 >
                   <Text style={[styles.actionText, styles.actionTextDark]}>Back</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.actionBtn}
-                  onPress={() => setLeads((prev) => moveLead(prev, lead.id, 1))}
+                  onPress={() => {
+                    const next = moveLead(leads, lead.id, 1);
+                    setLeads(next);
+                    const updated = next.find((item) => item.id === lead.id);
+                    if (updated && config.pipelineBase && isServerLead(updated.id)) {
+                      updateLead.mutate(updated);
+                    }
+                  }}
                 >
                   <Text style={styles.actionText}>Advance</Text>
                 </TouchableOpacity>
@@ -397,8 +442,11 @@ const seedLeads: Lead[] = [
 ];
 
 function addLeadFromReminder(current: Lead[], reminder: Reminder) {
+  const existing = current.find(
+    (lead) => lead.customerId === reminder.customer?.id && lead.source === "municipal"
+  );
+  if (existing) return current;
   const id = `reminder-${reminder.id}`;
-  if (current.some((lead) => lead.id === id)) return current;
   const score = reminder.priority === "high" ? 85 : reminder.priority === "low" ? 45 : 65;
   const title = reminder.customer?.business_name ?? reminder.title;
   return [
@@ -417,13 +465,21 @@ function addLeadFromReminder(current: Lead[], reminder: Reminder) {
   ];
 }
 
-function moveLead(current: Lead[], leadId: string, delta: number) {
+function moveLead(current: Lead[], leadId: string | number, delta: number) {
   return current.map((lead) => {
     if (lead.id !== leadId) return lead;
     const idx = pipelineStages.indexOf(lead.stage);
     const nextIdx = Math.max(0, Math.min(pipelineStages.length - 1, idx + delta));
     return { ...lead, stage: pipelineStages[nextIdx] };
   });
+}
+
+function replaceLeadId(current: Lead[], oldId: string | number, newId: string | number) {
+  return current.map((lead) => (lead.id === oldId ? { ...lead, id: newId } : lead));
+}
+
+function isServerLead(id: string | number) {
+  return typeof id === "number";
 }
 
 function buildPriorityQueues(leads: Lead[]) {

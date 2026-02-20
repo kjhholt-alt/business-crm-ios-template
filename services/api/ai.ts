@@ -3,6 +3,7 @@ import { fetchJson } from "@/services/api/http";
 import type {
   AiBriefRequest,
   AiBriefResponse,
+  AiFollowUpsResponse,
   AiNoteSummaryRequest,
   AiNoteSummaryResponse,
 } from "@/types/ai";
@@ -36,6 +37,24 @@ export async function summarizeAccountNotes(
   }
   const url = `${config.aiAssistBase}/ai/notes`;
   return fetchJson<AiNoteSummaryResponse>(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(input),
+    },
+    20_000
+  );
+}
+
+export async function generateFollowUps(
+  input: AiNoteSummaryRequest
+): Promise<AiFollowUpsResponse> {
+  if (!config.aiAssistBase) {
+    throw new Error("AI assist base URL not configured.");
+  }
+  const url = `${config.aiAssistBase}/ai/followups`;
+  return fetchJson<AiFollowUpsResponse>(
     url,
     {
       method: "POST",

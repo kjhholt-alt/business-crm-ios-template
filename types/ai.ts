@@ -27,3 +27,13 @@ export interface AiNoteSummaryResponse {
   highlights: string[];
   nextActions: string[];
 }
+
+export interface AiFollowUpDraft {
+  channel: "email" | "sms" | "call";
+  subject?: string;
+  body: string;
+}
+
+export interface AiFollowUpsResponse {
+  followUps: AiFollowUpDraft[];
+}

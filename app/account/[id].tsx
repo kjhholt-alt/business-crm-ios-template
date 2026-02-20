@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { theme } from "@/constants/theme";
 import { AppCard, ErrorBlock, LoadingBlock } from "@/components/ui";
-import { useAiNoteSummary } from "@/hooks/use-ai";
+import { useAiFollowUps, useAiNoteSummary } from "@/hooks/use-ai";
 import {
   useAddCustomerNote,
   useCreateCustomerActivity,
@@ -35,6 +35,23 @@ export default function AccountDetailScreen() {
   const notes = useCustomerNotes(customerId);
   const activities = useCustomerActivities(customerId);
   const aiSummary = useAiNoteSummary(
+    {
+      customerName: customer.data?.business_name,
+      notes:
+        (notes.data ?? []).map((note) => ({
+          content: note.content,
+          created_at: note.created_at,
+        })) ?? [],
+      activities:
+        (activities.data ?? []).map((activity) => ({
+          title: activity.title,
+          description: activity.description,
+          activity_date: activity.activity_date,
+        })) ?? [],
+    },
+    false
+  );
+  const aiFollowUps = useAiFollowUps(
     {
       customerName: customer.data?.business_name,
       notes:
@@ -235,6 +252,35 @@ export default function AccountDetailScreen() {
         >
           <Text style={styles.buttonText}>
             {aiSummary.isLoading ? "Summarizing..." : "Generate Summary"}
+          </Text>
+        </TouchableOpacity>
+      </AppCard>
+
+      <AppCard title="AI Follow-ups">
+        <Text style={styles.meta}>Drafts for email/SMS/call scripts.</Text>
+        {aiFollowUps.isError ? (
+          <Text style={styles.errorText}>AI follow-ups failed. Check AI proxy.</Text>
+        ) : null}
+        {aiFollowUps.data?.followUps?.length ? (
+          <View style={styles.list}>
+            {aiFollowUps.data.followUps.map((item, idx) => (
+              <View key={`draft-${idx}`} style={styles.item}>
+                <Text style={styles.itemText}>
+                  {item.channel.toUpperCase()}
+                  {item.subject ? ` • ${item.subject}` : ""}
+                </Text>
+                <Text style={styles.itemMeta}>{item.body}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        <TouchableOpacity
+          style={styles.button}
+          disabled={aiFollowUps.isLoading}
+          onPress={() => aiFollowUps.refetch()}
+        >
+          <Text style={styles.buttonText}>
+            {aiFollowUps.isLoading ? "Generating..." : "Generate Drafts"}
           </Text>
         </TouchableOpacity>
       </AppCard>
