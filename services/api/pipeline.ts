@@ -15,6 +15,34 @@ export async function listPipelineLeads(): Promise<Lead[]> {
   return fetchJson<Lead[]>(url, { headers: authHeaders() });
 }
 
+export async function getPipelinePreferences(): Promise<{
+  filters: string[];
+  my_day_stages: string[];
+}> {
+  if (!config.pipelineBase) {
+    throw new Error("Pipeline base URL not configured.");
+  }
+  const url = `${config.pipelineBase}/pipeline/preferences/`;
+  return fetchJson<{ filters: string[]; my_day_stages: string[] }>(url, {
+    headers: authHeaders(),
+  });
+}
+
+export async function savePipelinePreferences(input: {
+  filters: string[];
+  my_day_stages: string[];
+}) {
+  if (!config.pipelineBase) {
+    throw new Error("Pipeline base URL not configured.");
+  }
+  const url = `${config.pipelineBase}/pipeline/preferences/`;
+  return fetchJson(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(input),
+  });
+}
+
 export async function createPipelineLead(input: Lead): Promise<Lead> {
   if (!config.pipelineBase) {
     throw new Error("Pipeline base URL not configured.");

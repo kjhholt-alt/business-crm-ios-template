@@ -8,7 +8,9 @@ import {
   useCreatePipelineLead,
   useDashboardSummary,
   usePipelineLeads,
+  usePipelinePreferences,
   useReminders,
+  useSavePipelinePreferences,
   useUpdatePipelineLead,
 } from "@/hooks/use-crm-data";
 import {
@@ -27,6 +29,8 @@ export default function PipelineScreen() {
   const municipal = useDashboardSummary();
   const reminders = useReminders();
   const serverLeads = usePipelineLeads();
+  const serverPrefs = usePipelinePreferences();
+  const savePrefs = useSavePipelinePreferences();
   const createLead = useCreatePipelineLead();
   const updateLead = useUpdatePipelineLead();
   const [leads, setLeads] = useState<Lead[]>(seedLeads);
@@ -88,8 +92,16 @@ export default function PipelineScreen() {
         } else if (storedLeads && storedLeads.length) {
           setLeads(storedLeads);
         }
-        if (storedFilters && storedFilters.length) setActiveFilters(storedFilters);
-        if (storedMyDay && storedMyDay.length) setMyDayStages(storedMyDay);
+        if (serverPrefs.data?.filters?.length) {
+          setActiveFilters(serverPrefs.data.filters as PipelineFilterKey[]);
+        } else if (storedFilters && storedFilters.length) {
+          setActiveFilters(storedFilters);
+        }
+        if (serverPrefs.data?.my_day_stages?.length) {
+          setMyDayStages(serverPrefs.data.my_day_stages as PipelineStage[]);
+        } else if (storedMyDay && storedMyDay.length) {
+          setMyDayStages(storedMyDay);
+        }
       } catch {
         // ignore persistence failures
       } finally {
@@ -99,7 +111,7 @@ export default function PipelineScreen() {
     return () => {
       mounted = false;
     };
-  }, [serverLeads.data]);
+  }, [serverLeads.data, serverPrefs.data]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -109,12 +121,18 @@ export default function PipelineScreen() {
   useEffect(() => {
     if (!isHydrated) return;
     void savePipelineFilters(activeFilters);
-  }, [activeFilters, isHydrated]);
+    if (config.pipelineBase) {
+      savePrefs.mutate({ filters: activeFilters, my_day_stages: myDayStages });
+    }
+  }, [activeFilters, isHydrated, myDayStages, savePrefs]);
 
   useEffect(() => {
     if (!isHydrated) return;
     void saveMyDayStages(myDayStages);
-  }, [myDayStages, isHydrated]);
+    if (config.pipelineBase) {
+      savePrefs.mutate({ filters: activeFilters, my_day_stages: myDayStages });
+    }
+  }, [myDayStages, isHydrated, activeFilters, savePrefs]);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>

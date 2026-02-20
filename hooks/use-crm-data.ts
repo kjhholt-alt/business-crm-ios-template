@@ -15,7 +15,13 @@ import {
   listReminders,
   snoozeReminder,
 } from "@/services/api/municipal";
-import { createPipelineLead, listPipelineLeads, updatePipelineLead } from "@/services/api/pipeline";
+import {
+  createPipelineLead,
+  getPipelinePreferences,
+  listPipelineLeads,
+  savePipelinePreferences,
+  updatePipelineLead,
+} from "@/services/api/pipeline";
 import type { Reminder } from "@/types/crm";
 import {
   getScannerResults,
@@ -218,6 +224,25 @@ export function usePipelineLeads() {
     queryFn: listPipelineLeads,
     enabled: Boolean(config.pipelineBase),
     staleTime: 30_000,
+  });
+}
+
+export function usePipelinePreferences() {
+  return useQuery({
+    queryKey: ["pipeline-preferences"],
+    queryFn: getPipelinePreferences,
+    enabled: Boolean(config.pipelineBase),
+    staleTime: 30_000,
+  });
+}
+
+export function useSavePipelinePreferences() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: savePipelinePreferences,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pipeline-preferences"] });
+    },
   });
 }
 

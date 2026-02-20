@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { theme } from "@/constants/theme";
 import { AppCard, ErrorBlock, LoadingBlock } from "@/components/ui";
 import { useAiFollowUps, useAiNoteSummary } from "@/hooks/use-ai";
@@ -270,6 +271,12 @@ export default function AccountDetailScreen() {
                   {item.subject ? ` • ${item.subject}` : ""}
                 </Text>
                 <Text style={styles.itemMeta}>{item.body}</Text>
+                <TouchableOpacity
+                  style={styles.copyButton}
+                  onPress={() => Clipboard.setStringAsync(item.body)}
+                >
+                  <Text style={styles.copyButtonText}>Copy</Text>
+                </TouchableOpacity>
               </View>
             ))}
           </View>
@@ -380,4 +387,12 @@ const styles = StyleSheet.create({
   },
   itemText: { color: theme.text, fontSize: 13 },
   itemMeta: { color: theme.textMuted, fontSize: 11 },
+  copyButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  copyButtonText: { color: "#fff", fontWeight: "700", fontSize: 11 },
 });
