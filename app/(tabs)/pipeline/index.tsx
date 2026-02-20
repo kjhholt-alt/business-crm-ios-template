@@ -79,6 +79,7 @@ export default function PipelineScreen() {
   const aiBriefQuery = useAiBrief(leads);
   const [leadForExplain, setLeadForExplain] = useState<Lead | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const leadFit = useLeadFitExplanation(leadForExplain, false);
 
   useEffect(() => {
@@ -391,6 +392,7 @@ export default function PipelineScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}
+                  disabled={syncing}
                   onPress={() => {
                     if (!config.pipelineBase) {
                       toast.error("Pipeline sync not configured.");
@@ -404,25 +406,40 @@ export default function PipelineScreen() {
                       return;
                     }
                     let completed = 0;
+                    let failed = 0;
+                    setSyncing(true);
+                    setSyncMessage(`Syncing ${localLeads.length} leads...`);
                     localLeads.forEach((lead) => {
                       createLead.mutate(lead, {
                         onSuccess: (saved) => {
                           setLeads((prev) => replaceLeadId(prev, lead.id, saved.id));
                           completed += 1;
-                          if (completed === localLeads.length) {
-                            toast.success("Local leads synced.");
-                            setSyncMessage("Local leads synced.");
+                          if (completed + failed === localLeads.length) {
+                            setSyncing(false);
+                            if (failed === 0) {
+                              toast.success("Local leads synced.");
+                              setSyncMessage("Local leads synced.");
+                            } else {
+                              toast.error("Some leads failed to sync.");
+                              setSyncMessage(`Synced ${completed}, failed ${failed}.`);
+                            }
                           }
                         },
                         onError: () => {
-                          toast.error("Failed to sync one or more leads.");
-                          setSyncMessage("Failed to sync one or more leads.");
+                          failed += 1;
+                          if (completed + failed === localLeads.length) {
+                            setSyncing(false);
+                            toast.error("Some leads failed to sync.");
+                            setSyncMessage(`Synced ${completed}, failed ${failed}.`);
+                          }
                         },
                       });
                     });
                   }}
                 >
-                  <Text style={[styles.actionText, styles.actionTextDark]}>Sync Local</Text>
+                  <Text style={[styles.actionText, styles.actionTextDark]}>
+                    {syncing ? "Syncing..." : "Sync Local"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}

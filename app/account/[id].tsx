@@ -13,6 +13,7 @@ import * as Clipboard from "expo-clipboard";
 import { theme } from "@/constants/theme";
 import { AppCard, ErrorBlock, LoadingBlock } from "@/components/ui";
 import { useAiFollowUps, useAiNoteSummary } from "@/hooks/use-ai";
+import { config } from "@/services/api/config";
 import {
   useAddCustomerNote,
   useCreateCustomerActivity,
@@ -222,6 +223,9 @@ export default function AccountDetailScreen() {
 
       <AppCard title="AI Summary">
         <Text style={styles.meta}>Summarize notes + activity history.</Text>
+        {!config.aiAssistBase ? (
+          <Text style={styles.errorText}>AI assist not configured.</Text>
+        ) : null}
         {aiSummary.isError ? (
           <Text style={styles.errorText}>AI summary failed. Check AI proxy.</Text>
         ) : null}
@@ -248,7 +252,7 @@ export default function AccountDetailScreen() {
         ) : null}
         <TouchableOpacity
           style={styles.button}
-          disabled={aiSummary.isLoading}
+          disabled={aiSummary.isLoading || !config.aiAssistBase}
           onPress={() => aiSummary.refetch()}
         >
           <Text style={styles.buttonText}>
@@ -259,6 +263,9 @@ export default function AccountDetailScreen() {
 
       <AppCard title="AI Follow-ups">
         <Text style={styles.meta}>Drafts for email/SMS/call scripts.</Text>
+        {!config.aiAssistBase ? (
+          <Text style={styles.errorText}>AI assist not configured.</Text>
+        ) : null}
         {aiFollowUps.isError ? (
           <Text style={styles.errorText}>AI follow-ups failed. Check AI proxy.</Text>
         ) : null}
@@ -283,7 +290,7 @@ export default function AccountDetailScreen() {
         ) : null}
         <TouchableOpacity
           style={styles.button}
-          disabled={aiFollowUps.isLoading}
+          disabled={aiFollowUps.isLoading || !config.aiAssistBase}
           onPress={() => aiFollowUps.refetch()}
         >
           <Text style={styles.buttonText}>

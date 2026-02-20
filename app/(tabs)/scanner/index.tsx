@@ -32,6 +32,11 @@ export default function ScannerScreen() {
   const createReminder = useCreateReminder();
 
   const selectedAccountId = useMemo(() => Number(accountId || 0), [accountId]);
+  const cityChips = useMemo(() => {
+    const all = results.data ?? [];
+    const unique = Array.from(new Set(all.map((r) => r.city).filter(Boolean)));
+    return unique.slice(0, 8);
+  }, [results.data]);
 
   useEffect(() => {
     if (!autoMatchTarget) return;
@@ -90,6 +95,31 @@ export default function ScannerScreen() {
               style={[styles.input, styles.half]}
             />
           </View>
+          {cityChips.length ? (
+            <View style={styles.chips}>
+              {cityChips.map((chip) => (
+                <TouchableOpacity
+                  key={chip}
+                  style={[styles.chip, city === chip ? styles.chipActive : null]}
+                  onPress={() => setCity(chip)}
+                >
+                  <Text style={[styles.chipText, city === chip ? styles.chipTextActive : null]}>
+                    {chip}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              {(city || state || search || accountSearch) ? (
+                <TouchableOpacity style={styles.clearBtn} onPress={() => {
+                  setCity("");
+                  setState("");
+                  setSearch("");
+                  setAccountSearch("");
+                }}>
+                  <Text style={styles.clearText}>Clear</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
           <TextInput
             value={accountSearch}
             onChangeText={setAccountSearch}
@@ -272,4 +302,25 @@ const styles = StyleSheet.create({
   actionFollowUp: { backgroundColor: theme.amber },
   actionText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   actionFollowUpText: { color: "#111" },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  chip: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: theme.surface,
+  },
+  chipActive: { backgroundColor: theme.amber, borderColor: theme.amber },
+  chipText: { color: theme.textMuted, fontSize: 11, fontWeight: "700" },
+  chipTextActive: { color: "#111" },
+  clearBtn: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: theme.surfaceAlt,
+  },
+  clearText: { color: theme.text, fontSize: 11, fontWeight: "700" },
 });
