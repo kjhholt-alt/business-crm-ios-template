@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { config } from "@/services/api/config";
-import { generateAiBrief, generateFollowUps, summarizeAccountNotes } from "@/services/api/ai";
+import {
+  explainLeadFit,
+  generateAiBrief,
+  generateFollowUps,
+  summarizeAccountNotes,
+} from "@/services/api/ai";
 import type { Lead } from "@/types/crm";
 import type { AiNoteSummaryRequest } from "@/types/ai";
 
@@ -37,6 +42,15 @@ export function useAiFollowUps(input: AiNoteSummaryRequest, enabled = false) {
     ],
     queryFn: () => generateFollowUps(input),
     enabled: Boolean(config.aiAssistBase) && enabled,
+    staleTime: 10 * 60_000,
+  });
+}
+
+export function useLeadFitExplanation(lead: Lead | null, enabled = false) {
+  return useQuery({
+    queryKey: ["ai-leadfit", lead?.id ?? ""],
+    queryFn: () => explainLeadFit({ lead }),
+    enabled: Boolean(config.aiAssistBase) && enabled && Boolean(lead),
     staleTime: 10 * 60_000,
   });
 }

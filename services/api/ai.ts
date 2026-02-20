@@ -4,6 +4,7 @@ import type {
   AiBriefRequest,
   AiBriefResponse,
   AiFollowUpsResponse,
+  AiLeadFitResponse,
   AiNoteSummaryRequest,
   AiNoteSummaryResponse,
 } from "@/types/ai";
@@ -55,6 +56,22 @@ export async function generateFollowUps(
   }
   const url = `${config.aiAssistBase}/ai/followups`;
   return fetchJson<AiFollowUpsResponse>(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(input),
+    },
+    20_000
+  );
+}
+
+export async function explainLeadFit(input: { lead: unknown }): Promise<AiLeadFitResponse> {
+  if (!config.aiAssistBase) {
+    throw new Error("AI assist base URL not configured.");
+  }
+  const url = `${config.aiAssistBase}/ai/leadfit`;
+  return fetchJson<AiLeadFitResponse>(
     url,
     {
       method: "POST",

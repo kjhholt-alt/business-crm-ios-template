@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "@/constants/theme";
 import { AppCard, LoadingBlock } from "@/components/ui";
-import { useAiBrief } from "@/hooks/use-ai";
+import { useAiBrief, useLeadFitExplanation } from "@/hooks/use-ai";
 import {
   useBarrelhouseStats,
   useCreatePipelineLead,
@@ -76,6 +76,8 @@ export default function PipelineScreen() {
   ]);
   const aiBrief = useMemo(() => buildAIBrief(leads), [leads]);
   const aiBriefQuery = useAiBrief(leads);
+  const [leadForExplain, setLeadForExplain] = useState<Lead | null>(null);
+  const leadFit = useLeadFitExplanation(leadForExplain, false);
 
   useEffect(() => {
     let mounted = true;
@@ -340,6 +342,30 @@ export default function PipelineScreen() {
               {lead.nextAction ? (
                 <Text style={styles.nextAction}>Next: {lead.nextAction}</Text>
               ) : null}
+              {leadForExplain?.id === lead.id && leadFit.data ? (
+                <View style={styles.aiExplain}>
+                  <Text style={styles.aiExplainTitle}>Fit Summary</Text>
+                  <Text style={styles.aiBody}>{leadFit.data.summary}</Text>
+                  {leadFit.data.reasons.map((reason, idx) => (
+                    <Text key={`reason-${idx}`} style={styles.aiBullet}>
+                      • {reason}
+                    </Text>
+                  ))}
+                  {leadFit.data.risks.length ? (
+                    <View>
+                      <Text style={styles.aiExplainTitle}>Risks</Text>
+                      {leadFit.data.risks.map((risk, idx) => (
+                        <Text key={`risk-${idx}`} style={styles.aiBullet}>
+                          – {risk}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+              {leadForExplain?.id === lead.id && leadFit.isError ? (
+                <Text style={styles.errorText}>AI fit explanation failed.</Text>
+              ) : null}
               <View style={styles.pipelineActions}>
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}
@@ -353,6 +379,19 @@ export default function PipelineScreen() {
                   }}
                 >
                   <Text style={[styles.actionText, styles.actionTextDark]}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.actionGhost]}
+                  onPress={() => {
+                    setLeadForExplain(lead);
+                    void leadFit.refetch();
+                  }}
+                >
+                  <Text style={[styles.actionText, styles.actionTextDark]}>
+                    {leadForExplain?.id === lead.id && leadFit.isFetching
+                      ? "Explaining..."
+                      : "Explain Fit"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.actionBtn}
@@ -670,4 +709,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   aiButtonText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  aiExplain: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surfaceAlt,
+    borderRadius: 10,
+    padding: 10,
+    gap: 4,
+  },
+  aiExplainTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
+  aiBullet: { color: theme.textMuted, fontSize: 12 },
 });

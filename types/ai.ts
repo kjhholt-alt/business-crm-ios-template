@@ -37,3 +37,9 @@ export interface AiFollowUpDraft {
 export interface AiFollowUpsResponse {
   followUps: AiFollowUpDraft[];
 }
+
+export interface AiLeadFitResponse {
+  summary: string;
+  reasons: string[];
+  risks: string[];
+}
