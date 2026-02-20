@@ -196,7 +196,7 @@ export default function PipelineScreen() {
                   const added = next.find(
                     (lead) => lead.customerId === reminder.customer?.id && lead.source === "municipal"
                   );
-                  if (added && config.pipelineBase) {
+                  if (added && config.pipelineBase && isLocalLead(added.id)) {
                     createLead.mutate(added, {
                       onSuccess: (saved) => {
                         setLeads((prev) => replaceLeadId(prev, added.id, saved.id));
@@ -383,6 +383,23 @@ export default function PipelineScreen() {
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}
                   onPress={() => {
+                    if (!config.pipelineBase) return;
+                    const localLeads = leads.filter((lead) => isLocalLead(lead.id));
+                    if (localLeads.length === 0) return;
+                    localLeads.forEach((lead) => {
+                      createLead.mutate(lead, {
+                        onSuccess: (saved) => {
+                          setLeads((prev) => replaceLeadId(prev, lead.id, saved.id));
+                        },
+                      });
+                    });
+                  }}
+                >
+                  <Text style={[styles.actionText, styles.actionTextDark]}>Sync Local</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.actionGhost]}
+                  onPress={() => {
                     setLeadForExplain(lead);
                     void leadFit.refetch();
                   }}
@@ -537,6 +554,10 @@ function replaceLeadId(current: Lead[], oldId: string | number, newId: string | 
 
 function isServerLead(id: string | number) {
   return typeof id === "number";
+}
+
+function isLocalLead(id: string | number) {
+  return typeof id === "string";
 }
 
 function buildPriorityQueues(leads: Lead[]) {
