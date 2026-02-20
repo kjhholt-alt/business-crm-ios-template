@@ -1,0 +1,30 @@
+{
+  "name": "mobile-business-crm-template",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start --tunnel",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@tanstack/react-query": "^5.83.0",
+    "expo": "~54.0.27",
+    "expo-router": "~6.0.17",
+    "expo-status-bar": "~3.0.9",
+    "lucide-react-native": "^0.475.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "eslint": "^9.31.0",
+    "eslint-config-expo": "~10.0.0",
+    "typescript": "~5.9.2"
+  }
+}

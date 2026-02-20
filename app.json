@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Business CRM iOS Template",
+    "slug": "business-crm-ios-template",
+    "scheme": "businesscrm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
