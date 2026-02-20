@@ -37,6 +37,7 @@ export default function ScannerScreen() {
     const unique = Array.from(new Set(all.map((r) => r.city).filter(Boolean)));
     return unique.slice(0, 8);
   }, [results.data]);
+  const defaultChips = ["Davenport", "Moline", "Rock Island", "Cedar Rapids", "Iowa City", "Clinton"];
 
   useEffect(() => {
     if (!autoMatchTarget) return;
@@ -119,7 +120,19 @@ export default function ScannerScreen() {
                 </TouchableOpacity>
               ) : null}
             </View>
-          ) : null}
+          ) : (
+            <View style={styles.chips}>
+              {defaultChips.map((chip) => (
+                <TouchableOpacity
+                  key={chip}
+                  style={styles.chip}
+                  onPress={() => setCity(chip)}
+                >
+                  <Text style={styles.chipText}>{chip}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
           <TextInput
             value={accountSearch}
             onChangeText={setAccountSearch}

@@ -80,6 +80,7 @@ export default function PipelineScreen() {
   const [leadForExplain, setLeadForExplain] = useState<Lead | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncCooldownUntil, setSyncCooldownUntil] = useState<number | null>(null);
   const leadFit = useLeadFitExplanation(leadForExplain, false);
 
   useEffect(() => {
@@ -392,11 +393,16 @@ export default function PipelineScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.actionGhost]}
-                  disabled={syncing}
+                  disabled={syncing || (syncCooldownUntil !== null && Date.now() < syncCooldownUntil)}
                   onPress={() => {
                     if (!config.pipelineBase) {
                       toast.error("Pipeline sync not configured.");
                       setSyncMessage("Pipeline sync not configured.");
+                      return;
+                    }
+                    if (syncCooldownUntil !== null && Date.now() < syncCooldownUntil) {
+                      const seconds = Math.ceil((syncCooldownUntil - Date.now()) / 1000);
+                      setSyncMessage(`Please wait ${seconds}s before retrying.`);
                       return;
                     }
                     const localLeads = leads.filter((lead) => isLocalLead(lead.id));
@@ -422,6 +428,7 @@ export default function PipelineScreen() {
                             } else {
                               toast.error("Some leads failed to sync.");
                               setSyncMessage(`Synced ${completed}, failed ${failed}.`);
+                              setSyncCooldownUntil(Date.now() + 15000);
                             }
                           }
                         },
@@ -431,6 +438,7 @@ export default function PipelineScreen() {
                             setSyncing(false);
                             toast.error("Some leads failed to sync.");
                             setSyncMessage(`Synced ${completed}, failed ${failed}.`);
+                            setSyncCooldownUntil(Date.now() + 15000);
                           }
                         },
                       });
@@ -438,7 +446,11 @@ export default function PipelineScreen() {
                   }}
                 >
                   <Text style={[styles.actionText, styles.actionTextDark]}>
-                    {syncing ? "Syncing..." : "Sync Local"}
+                    {syncing
+                      ? "Syncing..."
+                      : syncCooldownUntil && Date.now() < syncCooldownUntil
+                        ? "Wait..."
+                        : "Sync Local"}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
