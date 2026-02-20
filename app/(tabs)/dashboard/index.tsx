@@ -29,9 +29,9 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Municipal CRM Command Center</Text>
+      <Text style={styles.title}>Today</Text>
       <Text style={styles.subtitle}>
-        Municipal execution + BarrelHouse UX pattern for a mobile-first field app.
+        Daily priorities for your stepdad's municipal workflow.
       </Text>
 
       <View style={styles.grid}>

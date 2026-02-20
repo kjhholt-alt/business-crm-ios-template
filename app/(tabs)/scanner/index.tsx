@@ -1,11 +1,31 @@
-import { FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  FlatList,
+  Linking,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { theme } from "@/constants/theme";
 import { AppCard, ErrorBlock, LoadingBlock } from "@/components/ui";
-import { useScannerResults, useScannerStats } from "@/hooks/use-crm-data";
+import {
+  useCreateReminder,
+  useScannerResultsFiltered,
+  useScannerStats,
+} from "@/hooks/use-crm-data";
 
 export default function ScannerScreen() {
+  const [search, setSearch] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [accountId, setAccountId] = useState("");
   const stats = useScannerStats();
-  const results = useScannerResults();
+  const results = useScannerResultsFiltered({ search, city, state });
+  const createReminder = useCreateReminder();
+
+  const selectedAccountId = useMemo(() => Number(accountId || 0), [accountId]);
 
   return (
     <View style={styles.root}>
@@ -21,6 +41,42 @@ export default function ScannerScreen() {
             <Text style={styles.metric}>Keywords: {stats.data.active_keywords}</Text>
           </>
         ) : null}
+      </AppCard>
+
+      <AppCard title="Filters" subtitle="City/state/keyword search">
+        <View style={styles.filters}>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Keyword or title"
+            placeholderTextColor={theme.textMuted}
+            style={styles.input}
+          />
+          <View style={styles.filterRow}>
+            <TextInput
+              value={city}
+              onChangeText={setCity}
+              placeholder="City"
+              placeholderTextColor={theme.textMuted}
+              style={[styles.input, styles.half]}
+            />
+            <TextInput
+              value={state}
+              onChangeText={setState}
+              placeholder="State"
+              placeholderTextColor={theme.textMuted}
+              style={[styles.input, styles.half]}
+            />
+          </View>
+          <TextInput
+            value={accountId}
+            onChangeText={setAccountId}
+            keyboardType="numeric"
+            placeholder="Account ID for follow-up actions"
+            placeholderTextColor={theme.textMuted}
+            style={styles.input}
+          />
+        </View>
       </AppCard>
 
       <Text style={styles.section}>Recent Hits</Text>
@@ -41,6 +97,34 @@ export default function ScannerScreen() {
             <Text numberOfLines={2} style={styles.resultSnippet}>
               {item.snippet}
             </Text>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => Linking.openURL(item.source_url)}
+              >
+                <Text style={styles.actionText}>Open Source</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.actionFollowUp]}
+                disabled={!selectedAccountId || createReminder.isPending}
+                onPress={() => {
+                  const due = new Date();
+                  due.setDate(due.getDate() + 2);
+                  createReminder.mutate({
+                    customerId: selectedAccountId,
+                    title: `Scanner follow-up: ${item.keyword}`,
+                    description: `${item.page_title} (${item.city}, ${item.state})`,
+                    reminderDate: due.toISOString().slice(0, 10),
+                    priority: "high",
+                    reminderType: "scanner_hit",
+                  });
+                }}
+              >
+                <Text style={[styles.actionText, styles.actionFollowUpText]}>
+                  Create Follow-up
+                </Text>
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         )}
       />
@@ -53,6 +137,19 @@ const styles = StyleSheet.create({
   title: { color: theme.text, fontSize: 24, fontWeight: "800" },
   metric: { color: theme.text, fontSize: 14 },
   section: { color: theme.text, fontSize: 16, fontWeight: "700" },
+  filters: { gap: 8 },
+  filterRow: { flexDirection: "row", gap: 8 },
+  input: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+    color: theme.text,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+  },
+  half: { flex: 1 },
   list: { gap: 10, paddingBottom: 40 },
   result: {
     backgroundColor: theme.surfaceAlt,
@@ -65,4 +162,14 @@ const styles = StyleSheet.create({
   resultTitle: { color: theme.text, fontSize: 15, fontWeight: "700" },
   resultMeta: { color: theme.amber, fontSize: 12 },
   resultSnippet: { color: theme.textMuted, fontSize: 12 },
+  actions: { marginTop: 8, flexDirection: "row", gap: 8 },
+  actionBtn: {
+    borderRadius: 8,
+    backgroundColor: "#1d4ed8",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  actionFollowUp: { backgroundColor: theme.amber },
+  actionText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  actionFollowUpText: { color: "#111" },
 });

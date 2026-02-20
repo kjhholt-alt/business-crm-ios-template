@@ -21,11 +21,30 @@ npx expo start --tunnel
 
 ## Current Tabs
 
-- `Dashboard`: municipal reminder KPIs + scanner health
+- `Today`: municipal reminder KPIs + quick queue actions + route launch
 - `Accounts`: live customer search/list from Supabase
-- `Pipeline`: BarrelHouse-style KPI card + municipal queue
+- `Reminders`: overdue/today/week buckets with one-tap complete/snooze
 - `Scanner`: real meeting-result feed
 - `Connections`: API connection health checks
+
+## Municipal Parity Status (Single-User Rollout)
+
+- Account detail now includes:
+  - tap-to-call/text/email
+  - note creation + history
+  - activity logging to Supabase
+  - quick reminder creation
+- Reminder workflow now includes:
+  - overdue/today/week queue
+  - complete + snooze actions
+- Scanner workflow now includes:
+  - city/state/search filters
+  - create follow-up reminder action from scanner hit
+- Route module now includes:
+  - stop list generated from real reminders with customer addresses
+  - open each stop in maps
+
+See `STEPDAD_INTEGRATION_PLAN.md` for full integration map.
 
 ## Design Direction
 
@@ -36,7 +55,7 @@ npx expo start --tunnel
 ## Immediate Next Build Steps
 
 1. Add secure auth (Supabase Auth or backend JWT)
-2. Add pipeline drag/move actions with backend writes
-3. Add AI assist tab for note summarization and follow-up draft
-4. Add push notifications for overdue/today reminders
-5. Add full route optimizer and stop completion sync
+2. Add route optimization and stop-complete writeback
+3. Add scanner hit -> customer match suggestions (no manual account ID)
+4. Add AI assist tab for note summarization and follow-up draft
+5. Add push notifications for overdue/today reminders

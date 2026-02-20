@@ -21,6 +21,14 @@ export interface Reminder {
   reminder_type?: string;
   completed_at?: string | null;
   snoozed_until?: string | null;
+  customer?: {
+    id: number;
+    business_name: string;
+    city: string;
+    state: string;
+    main_phone: string | null;
+    bill_to_address: string | null;
+  };
 }
 
 export interface CustomerNote {

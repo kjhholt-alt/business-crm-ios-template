@@ -14,7 +14,11 @@ import {
   listReminders,
   snoozeReminder,
 } from "@/services/api/municipal";
-import { getScannerResults, getScannerStats } from "@/services/api/scanner";
+import {
+  getScannerResults,
+  getScannerResultsFiltered,
+  getScannerStats,
+} from "@/services/api/scanner";
 
 export function useDashboardSummary() {
   return useQuery({
@@ -137,6 +141,26 @@ export function useScannerResults() {
   return useQuery({
     queryKey: ["scanner-results"],
     queryFn: () => getScannerResults(20),
+    staleTime: 120_000,
+  });
+}
+
+export function useScannerResultsFiltered(filters: {
+  city?: string;
+  state?: string;
+  keyword?: string;
+  search?: string;
+}) {
+  return useQuery({
+    queryKey: ["scanner-results", filters],
+    queryFn: () =>
+      getScannerResultsFiltered({
+        limit: 30,
+        city: filters.city,
+        state: filters.state,
+        keyword: filters.keyword,
+        search: filters.search,
+      }),
     staleTime: 120_000,
   });
 }

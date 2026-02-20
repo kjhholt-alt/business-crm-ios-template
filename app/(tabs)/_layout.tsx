@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
 import {
-  Activity,
   Building2,
   CircleGauge,
   ScanSearch,
   PlugZap,
+  BellRing,
 } from "lucide-react-native";
 import { theme } from "@/constants/theme";
 
@@ -34,10 +34,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="pipeline/index"
+        name="reminders/index"
         options={{
-          title: "Pipeline",
-          tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+          title: "Reminders",
+          tabBarIcon: ({ color, size }) => <BellRing color={color} size={size} />,
         }}
       />
       <Tabs.Screen

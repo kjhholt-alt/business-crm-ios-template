@@ -1,6 +1,6 @@
 # Implementation Plan - Business CRM iOS Template
 
-Status (2026-02-20): Phase 1 COMPLETE
+Status (2026-02-20): Phase 1 COMPLETE, Phase A Parity In Progress
 
 ## Objective
 
@@ -24,6 +24,15 @@ Create one production iOS CRM app that combines:
 - [x] Activity logging (call/email/meeting) writing to Supabase
 - [x] Reminder actions (complete/snooze/create) from mobile
 - [x] Route planner placeholder linked to municipal routes module
+
+## Phase A - Single-User Municipal Parity (Stepdad Rollout)
+
+- [x] "Today" dashboard with one-tap reminder actions
+- [x] Dedicated reminders queue (overdue/today/week)
+- [x] Scanner filters (city/state/search) and follow-up reminder action
+- [x] Route list generated from open reminders + map launch
+- [ ] Scanner hit to customer auto-match (replace manual account id)
+- [ ] Route stop completion writeback to activities/reminders
 
 ## Phase 2 - Pipeline + Lead Intelligence
 

@@ -136,7 +136,7 @@ export async function createCustomerActivity(input: {
 export async function listReminders(): Promise<Reminder[]> {
   const url = `${restBase}/reminders?${qs({
     select:
-      "id,customer_id,title,description,reminder_date,status,priority,reminder_type,completed_at,snoozed_until",
+      "id,customer_id,title,description,reminder_date,status,priority,reminder_type,completed_at,snoozed_until,customer:customers(id,business_name,city,state,main_phone,bill_to_address)",
     order: "reminder_date.asc",
     status: "neq.cancelled",
   })}`;
