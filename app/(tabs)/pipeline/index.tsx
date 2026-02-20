@@ -78,6 +78,7 @@ export default function PipelineScreen() {
   const aiBrief = useMemo(() => buildAIBrief(leads), [leads]);
   const aiBriefQuery = useAiBrief(leads);
   const [leadForExplain, setLeadForExplain] = useState<Lead | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const leadFit = useLeadFitExplanation(leadForExplain, false);
 
   useEffect(() => {
@@ -176,6 +177,7 @@ export default function PipelineScreen() {
         ) : (
           <Text style={styles.note}>Using local-only pipeline storage.</Text>
         )}
+        {syncMessage ? <Text style={styles.syncBanner}>{syncMessage}</Text> : null}
         {municipalLeads.length === 0 ? (
           <Text style={styles.note}>No open reminders to add.</Text>
         ) : (
@@ -386,11 +388,13 @@ export default function PipelineScreen() {
                   onPress={() => {
                     if (!config.pipelineBase) {
                       toast.error("Pipeline sync not configured.");
+                      setSyncMessage("Pipeline sync not configured.");
                       return;
                     }
                     const localLeads = leads.filter((lead) => isLocalLead(lead.id));
                     if (localLeads.length === 0) {
                       toast.success("All leads already synced.");
+                      setSyncMessage("All leads already synced.");
                       return;
                     }
                     let completed = 0;
@@ -401,10 +405,12 @@ export default function PipelineScreen() {
                           completed += 1;
                           if (completed === localLeads.length) {
                             toast.success("Local leads synced.");
+                            setSyncMessage("Local leads synced.");
                           }
                         },
                         onError: () => {
                           toast.error("Failed to sync one or more leads.");
+                          setSyncMessage("Failed to sync one or more leads.");
                         },
                       });
                     });
@@ -755,4 +761,15 @@ const styles = StyleSheet.create({
   },
   aiExplainTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
   aiBullet: { color: theme.textMuted, fontSize: 12 },
+  syncBanner: {
+    alignSelf: "flex-start",
+    backgroundColor: theme.surfaceAlt,
+    borderColor: theme.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    color: theme.text,
+    fontSize: 12,
+  },
 });
