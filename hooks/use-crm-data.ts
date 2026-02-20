@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBarrelhousePipelineStats } from "@/services/api/barrelhouse";
 import { config } from "@/services/api/config";
 import { getConnectionStatuses } from "@/services/api/connections";
 import {
@@ -198,14 +197,6 @@ export function useScannerResultsFiltered(filters: {
         keyword: filters.keyword,
         search: filters.search,
       }),
-    staleTime: 120_000,
-  });
-}
-
-export function useBarrelhouseStats() {
-  return useQuery({
-    queryKey: ["barrelhouse-pipeline-stats"],
-    queryFn: getBarrelhousePipelineStats,
     staleTime: 120_000,
   });
 }

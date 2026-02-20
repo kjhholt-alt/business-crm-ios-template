@@ -110,7 +110,7 @@ export type PipelineStage =
 
 export interface Lead {
   id: string | number;
-  source: "municipal" | "barrelhouse" | "manual";
+  source: "municipal" | "manual";
   title: string;
   city?: string;
   state?: string;

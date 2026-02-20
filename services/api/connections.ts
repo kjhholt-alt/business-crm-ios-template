@@ -29,13 +29,6 @@ export async function getConnectionStatuses(): Promise<ConnectionStatus[]> {
       name: "Municipal Scanner API",
       endpoint: `${config.municipalScannerBase}/stats/`,
     },
-    {
-      id: "barrelhouse",
-      name: "BarrelHouse CRM API",
-      endpoint: config.barrelhouseApiBase
-        ? `${config.barrelhouseApiBase}/api/pipeline/stats/`
-        : "Not configured",
-    },
   ];
 
   const results: ConnectionStatus[] = [];
@@ -46,7 +39,7 @@ export async function getConnectionStatuses(): Promise<ConnectionStatus[]> {
         name: target.name,
         endpoint: target.endpoint,
         ok: false,
-        message: "Set EXPO_PUBLIC_BARRELHOUSE_API_BASE",
+        message: "Not configured",
       });
       continue;
     }

@@ -5,7 +5,6 @@ import { theme } from "@/constants/theme";
 import { AppCard, LoadingBlock } from "@/components/ui";
 import { useAiBrief, useLeadFitExplanation } from "@/hooks/use-ai";
 import {
-  useBarrelhouseStats,
   useCreatePipelineLead,
   useDashboardSummary,
   usePipelineLeads,
@@ -26,7 +25,6 @@ import { config } from "@/services/api/config";
 import type { Lead, PipelineFilterKey, PipelineStage, Reminder } from "@/types/crm";
 
 export default function PipelineScreen() {
-  const barrelhouse = useBarrelhouseStats();
   const municipal = useDashboardSummary();
   const reminders = useReminders();
   const serverLeads = usePipelineLeads();
@@ -150,27 +148,8 @@ export default function PipelineScreen() {
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Pipeline</Text>
       <Text style={styles.subtitle}>
-        BarrelHouse structure merged with municipal follow-up workflow.
+        Municipal follow-up workflow with mobile-first pipeline actions.
       </Text>
-
-      <AppCard title="BarrelHouse Pipeline KPIs" subtitle="Optional external CRM API">
-        {barrelhouse.isLoading ? <LoadingBlock /> : null}
-        {!barrelhouse.data ? (
-          <Text style={styles.note}>
-            Not connected yet. Set `EXPO_PUBLIC_BARRELHOUSE_API_BASE` to enable.
-          </Text>
-        ) : (
-          <View style={styles.metrics}>
-            <Metric label="Total Leads" value={barrelhouse.data.total_leads} />
-            <Metric label="Qualified" value={barrelhouse.data.qualified_leads} />
-            <Metric label="Meetings" value={barrelhouse.data.meetings_this_week} />
-            <Metric
-              label="Conversion"
-              value={`${barrelhouse.data.conversion_rate.toFixed(1)}%`}
-            />
-          </View>
-        )}
-      </AppCard>
 
       <AppCard title="Municipal Follow-up Queue">
         <Metric label="Overdue" value={municipal.data?.overdue ?? 0} />

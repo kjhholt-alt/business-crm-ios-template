@@ -15,7 +15,7 @@ export default function ConnectionsScreen() {
         </TouchableOpacity>
       </View>
       <Text style={styles.subtitle}>
-        This is where iOS CRM talks to Supabase, scanner, and optional BarrelHouse APIs.
+        This is where iOS CRM talks to Supabase and the municipal scanner.
       </Text>
 
       {connections.isLoading ? <LoadingBlock label="Checking endpoints..." /> : null}
