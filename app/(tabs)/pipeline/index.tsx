@@ -118,6 +118,12 @@ export default function PipelineScreen() {
   }, [serverLeads.data, serverPrefs.data]);
 
   useEffect(() => {
+    if (!syncMessage) return;
+    const timer = setTimeout(() => setSyncMessage(null), 4000);
+    return () => clearTimeout(timer);
+  }, [syncMessage]);
+
+  useEffect(() => {
     if (!isHydrated) return;
     void savePipelineLeads(leads);
   }, [leads, isHydrated]);
