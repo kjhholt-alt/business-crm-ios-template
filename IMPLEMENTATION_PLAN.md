@@ -48,10 +48,11 @@ Create one production iOS CRM app that combines:
 
 ## Phase 3 - AI Assist Layer
 
-- AI note summarizer for meeting minutes and account timelines
-- Auto-generated follow-up drafts (email/SMS/call scripts)
-- Lead fit score explanation panel (why this is hot/cold)
-- Weekly AI brief: opportunities, stale leads, urgent follow-ups
+- [x] AI assist UI panel (weekly brief + follow-up drafts, mocked)
+- [ ] AI note summarizer for meeting minutes and account timelines
+- [ ] Auto-generated follow-up drafts (email/SMS/call scripts)
+- [ ] Lead fit score explanation panel (why this is hot/cold)
+- [ ] Weekly AI brief: opportunities, stale leads, urgent follow-ups (real)
 
 ## Phase 4 - Integrations and Reliability
 

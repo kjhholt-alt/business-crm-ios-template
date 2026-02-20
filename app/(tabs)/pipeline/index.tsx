@@ -42,6 +42,7 @@ export default function PipelineScreen() {
       ),
     [leads]
   );
+  const aiBrief = useMemo(() => buildAIBrief(leads), [leads]);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
@@ -197,6 +198,26 @@ export default function PipelineScreen() {
           ))
         )}
       </AppCard>
+
+      <AppCard title="AI Assist" subtitle="Drafts and insights (mocked)">
+        <Text style={styles.aiHeadline}>Weekly Brief</Text>
+        <Text style={styles.aiBody}>{aiBrief.summary}</Text>
+
+        <Text style={styles.aiHeadline}>Hot Lead Insight</Text>
+        <Text style={styles.aiBody}>{aiBrief.hotInsight}</Text>
+
+        <Text style={styles.aiHeadline}>Suggested Follow-ups</Text>
+        {aiBrief.followUps.map((item) => (
+          <View key={item.id} style={styles.aiRow}>
+            <Text style={styles.aiRowTitle}>{item.title}</Text>
+            <Text style={styles.aiRowBody}>{item.suggestion}</Text>
+          </View>
+        ))}
+
+        <TouchableOpacity style={styles.aiButton}>
+          <Text style={styles.aiButtonText}>Generate Real Brief</Text>
+        </TouchableOpacity>
+      </AppCard>
     </ScrollView>
   );
 }
@@ -279,6 +300,28 @@ function buildPriorityQueues(leads: Lead[]) {
     (lead) => lead.stage === "Qualified" || lead.stage === "Meeting Scheduled"
   );
   return { hot, stale, needsFollowUp };
+}
+
+function buildAIBrief(leads: Lead[]) {
+  const hot = leads.filter((lead) => lead.score >= 80);
+  const next = hot[0] ?? leads[0];
+  const summary = hot.length
+    ? `${hot.length} hot leads ready for action. Focus on ${hot
+        .slice(0, 2)
+        .map((l) => l.title)
+        .join(", ")}.`
+    : "No hot leads detected. Promote new leads with quick outreach today.";
+  const hotInsight = next
+    ? `${next.title} is trending with a score of ${next.score}. Prioritize a call or on-site visit.`
+    : "No active leads yet. Add reminders to seed the pipeline.";
+  const followUps = (leads.length ? leads : seedLeads).slice(0, 3).map((lead) => ({
+    id: lead.id,
+    title: lead.title,
+    suggestion: lead.nextAction
+      ? `Next step: ${lead.nextAction}.`
+      : "Draft a short follow-up email and confirm timeline.",
+  }));
+  return { summary, hotInsight, followUps };
 }
 
 const styles = StyleSheet.create({
@@ -387,4 +430,24 @@ const styles = StyleSheet.create({
   queueStale: { backgroundColor: "#6b7280" },
   queueFollow: { backgroundColor: "#0f766e" },
   queueTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
+  aiHeadline: { color: theme.text, fontSize: 13, fontWeight: "800" },
+  aiBody: { color: theme.textMuted, fontSize: 12, marginBottom: 6 },
+  aiRow: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surfaceAlt,
+    borderRadius: 10,
+    padding: 10,
+    gap: 4,
+  },
+  aiRowTitle: { color: theme.text, fontSize: 12, fontWeight: "700" },
+  aiRowBody: { color: theme.textMuted, fontSize: 12 },
+  aiButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  aiButtonText: { color: "#fff", fontSize: 12, fontWeight: "700" },
 });
