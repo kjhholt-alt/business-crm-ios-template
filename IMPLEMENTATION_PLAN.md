@@ -40,9 +40,10 @@ Create one production iOS CRM app that combines:
 - Unified lead model that can display:
   - municipal procurement leads
   - BarrelHouse franchise leads
-- Stage movement actions with optimistic updates
-- Scoring badges and priority queues
-- Saved filters and "my day" queue
+- [x] Stage movement actions with optimistic updates (local state)
+- [x] Scoring badges for active leads
+- [ ] Priority queues (stale/hot/needs-follow-up)
+- [ ] Saved filters and "my day" queue
 
 ## Phase 3 - AI Assist Layer
 

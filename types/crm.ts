@@ -99,3 +99,23 @@ export interface ConnectionStatus {
   ok: boolean;
   message: string;
 }
+
+export type PipelineStage =
+  | "New"
+  | "Contacted"
+  | "Qualified"
+  | "Meeting Scheduled"
+  | "Proposal / Bid Sent"
+  | "Won / Closed";
+
+export interface Lead {
+  id: string;
+  source: "municipal" | "barrelhouse" | "manual";
+  title: string;
+  city?: string;
+  state?: string;
+  score: number;
+  stage: PipelineStage;
+  nextAction?: string;
+  customerId?: number;
+}
