@@ -79,13 +79,13 @@ function ReminderSection({
   onAccount,
 }: {
   title: string;
-  items: Array<{
+  items: {
     id: number;
     title: string;
     reminder_date: string;
     customer_id?: number;
     customer?: { business_name: string; city: string; state: string };
-  }>;
+  }[];
   onDone: (id: number) => void;
   onSnooze: (id: number) => void;
   onAccount: (id: number) => void;
