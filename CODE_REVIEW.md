@@ -20,3 +20,26 @@ Scope: business-crm-ios-template (pipeline persistence, AI assist, reminders/das
 
 ## Notes
 - No functional regressions detected in the current UI flow.
+
+---
+
+Date: 2026-02-20
+Scope: business-crm-ios-template (AI UX + pipeline sync + scanner chips)
+
+## Findings (ordered by severity)
+
+### High
+- None found in this pass.
+
+### Medium
+- AI calls rely on `EXPO_PUBLIC_AI_ASSIST_BASE` and token; without them, the UX shows “not configured.” This is correct but still a deployment blocker for AI features. Ensure envs are set before any production test.
+- Pipeline sync retries are per‑lead; there’s no backoff or aggregated error context. If the backend is unavailable, a user can spam “Sync Local.” Consider disable/lockout for a few seconds on error.
+
+### Low
+- Scanner city chips are derived from the current results list. If no results are loaded yet, chips won’t appear; that’s expected but could be confusing for first‑time users.
+
+## Tests
+- `npm run lint` passed.
+
+## Notes
+- No functional regressions detected in the current UI flow.
